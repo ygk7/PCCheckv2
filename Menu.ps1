@@ -14,63 +14,6 @@
 # 05 - November - 2024
 
 $ErrorActionPreference = "SilentlyContinue" 
-
-# ===================== Discord-Benachrichtigungen =====================
-# Webhook-URL hier eintragen (Server-/Kanaleinstellungen -> Integrationen -> Webhooks)
-$DiscordWebhookUrl = "https://discord.com/api/webhooks/1545965631227301948/oBzOz5bcfLwHDuc9dKKjclf0rjR6Ju0hYYuVPqiy0_A8UtkR_YNuJBsBr06p41ISpw1M"
-$DiscordCheckerRoleId = "1545933045305966664"
-
-$Global:PCName = $env:COMPUTERNAME
-$Global:PSVersionString = $PSVersionTable.PSVersion.ToString()
-# Hinweis: Der tatsächlich eingeloggte Discord-Benutzername lässt sich aus einem
-# PowerShell-Skript heraus nicht zuverlässig und sicher auslesen (das würde Zugriff
-# auf lokale Discord-Zugangsdaten/Tokens erfordern, was ein Sicherheitsrisiko wäre
-# und hier bewusst nicht gemacht wird). Falls gewünscht, hier manuell eintragen:
-$Global:DiscordUsername = "nicht ermittelbar"
-
-function Send-DiscordNotification {
-    param(
-        [string]$Title,
-        [string]$Description = "",
-        [int]$Color = 3447003,
-        [switch]$PingRole,
-        [array]$ExtraFields = @()
-    )
-
-    if ([string]::IsNullOrWhiteSpace($DiscordWebhookUrl) -or $DiscordWebhookUrl -eq "HIER_DEINE_WEBHOOK_URL_EINTRAGEN") {
-        return
-    }
-
-    $baseFields = @(
-        @{ name = "Computername"; value = $Global:PCName; inline = $true },
-        @{ name = "PowerShell-Version"; value = $Global:PSVersionString; inline = $true },
-        @{ name = "Discordname"; value = $Global:DiscordUsername; inline = $true }
-    )
-
-    $embed = @{
-        title       = $Title
-        description = $Description
-        color       = $Color
-        fields      = @($baseFields + $ExtraFields)
-        timestamp   = (Get-Date).ToUniversalTime().ToString("o")
-    }
-
-    $payload = @{ embeds = @($embed) }
-
-    if ($PingRole) {
-        $payload["content"] = "<@&$DiscordCheckerRoleId>"
-        $payload["allowed_mentions"] = @{ roles = @($DiscordCheckerRoleId) }
-    }
-
-    try {
-        $json = $payload | ConvertTo-Json -Depth 10
-        Invoke-RestMethod -Uri $DiscordWebhookUrl -Method Post -Body $json -ContentType "application/json; charset=utf-8" | Out-Null
-    } catch {
-        Write-Host "`n[Discord] Benachrichtigung konnte nicht gesendet werden: $($_.Exception.Message)" -ForegroundColor Red
-    }
-}
-# ========================================================================
-
 function Show-MainMenu {
     return Read-Host "`n`n`nChoose a Category:`n
     (1)`t`tChecks`n
@@ -106,7 +49,6 @@ function CleanTraces {
     Start-Sleep 1
     Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
     Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
-    Send-DiscordNotification -Title "🧹 Bereinigung durchgeführt" -Description "Die Spuren des Checks wurden bereinigt (installierte Programme ausgenommen)." -Color 15105570
     Write-Host "Traces cleaned successfully." -ForegroundColor green
     Write-Host "`n`n`tReturning to Menu in " -NoNewline 
     Write-Host "2 " -NoNewLine -ForegroundColor Magenta
@@ -134,141 +76,89 @@ do {
                 switch ($checksChoice) {
                     1 {
                         Write-Host "`n`nPerforming Check..." -ForegroundColor yellow
-                        $startTime = Get-Date
-                        Send-DiscordNotification -Title "🔎 Full Check gestartet" -Description "Ein Full Check wurde gestartet." -Color 3447003 -PingRole -ExtraFields @(@{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true })
-                        try {
-                            New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
-                            New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
-                            Set-Location "C:\temp"
-                            Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
-                            Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
-                            $urls = @(
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/PCCheck.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/MFT.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Registry.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/SystemLogs.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/ProcDump.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Localhost.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
-                            )
-                            $destinationPath = "C:\Temp\Scripts"
-                            foreach ($url in $urls) {
-                                $fileName = [System.IO.Path]::GetFileName($url)
-                                $destinationFile = Join-Path -Path $destinationPath -ChildPath $fileName
-                                Invoke-WebRequest -Uri $url -OutFile $destinationFile -ErrorAction Stop
-                                if (Test-Path -Path $destinationFile) {
-                                    Write-Host "$fileName downloaded successfully."
-                                } else {
-                                    throw "Datei $fileName wurde nicht heruntergeladen."
-                                }
+                        New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
+                        New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
+                        Set-Location "C:\temp"
+                        Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
+                        Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
+                        $urls = @(
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/PCCheck.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/MFT.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Registry.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/SystemLogs.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/ProcDump.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Localhost.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
+                        )
+                        $destinationPath = "C:\Temp\Scripts"
+                        foreach ($url in $urls) {
+                            $fileName = [System.IO.Path]::GetFileName($url)
+                            $destinationFile = Join-Path -Path $destinationPath -ChildPath $fileName
+                            Invoke-WebRequest -Uri $url -OutFile $destinationFile
+                            if (Test-Path -Path $destinationFile) {
+                                Write-Host "$fileName downloaded successfully."
+                            } else {
+                                Write-Host "Failed to download $fileName."
                             }
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-                            Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
-                            & C:\temp\scripts\PCCheck.ps1
-                            $endTime = Get-Date
-                            Send-DiscordNotification -Title "🔵 Full Check beendet" -Description "Der Full Check wurde abgeschlossen." -Color 3447003 -PingRole -ExtraFields @(
-                                @{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Endzeit"; value = $endTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Laufzeit"; value = $endTime.Subtract($startTime).ToString("hh\:mm\:ss"); inline = $true }
-                            )
-                        } catch {
-                            Send-DiscordNotification -Title "🔴 Fehler beim Full Check" -Description "$($_.Exception.Message)" -Color 15158332 -PingRole
-                            Write-Host "`n`nFehler beim Full Check: $($_.Exception.Message)" -ForegroundColor red
                         }
+                        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+                        Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
+                        & C:\temp\scripts\PCCheck.ps1
                         return
                     }
                     2 {
                         Write-Host "`n`nPerforming Quick Check..." -ForegroundColor yellow
-                        $startTime = Get-Date
-                        Send-DiscordNotification -Title "🔎 Quick Check gestartet" -Description "Ein Quick Check wurde gestartet." -Color 3447003 -PingRole -ExtraFields @(@{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true })
-                        try {
-                            New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
-                            New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
-                            Set-Location "C:\temp"
-                            Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
-                            Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
-                            $urls = @(
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/PCCheck.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/QuickMFT.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Registry.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/SystemLogs.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/ProcDump.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Localhost.ps1",
-                                "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
-                            )
-                            $destinationPath = "C:\Temp\Scripts"
-                            foreach ($url in $urls) {
-                                $fileName = [System.IO.Path]::GetFileName($url)
-                                $destinationFile = Join-Path -Path $destinationPath -ChildPath $fileName
-                                Invoke-WebRequest -Uri $url -OutFile $destinationFile -ErrorAction Stop
-                                if (Test-Path -Path $destinationFile) {
-                                    Write-Host "$fileName downloaded successfully."
-                                } else {
-                                    throw "Datei $fileName wurde nicht heruntergeladen."
-                                }
+                        New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
+                        New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
+                        Set-Location "C:\temp"
+                        Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
+                        Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
+                        $urls = @(
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/PCCheck.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/QuickMFT.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Registry.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/SystemLogs.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/ProcDump.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Localhost.ps1",
+                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
+                        )
+                        $destinationPath = "C:\Temp\Scripts"
+                        foreach ($url in $urls) {
+                            $fileName = [System.IO.Path]::GetFileName($url)
+                            $destinationFile = Join-Path -Path $destinationPath -ChildPath $fileName
+                            Invoke-WebRequest -Uri $url -OutFile $destinationFile
+                            if (Test-Path -Path $destinationFile) {
+                                Write-Host "$fileName downloaded successfully."
+                            } else {
+                                Write-Host "Failed to download $fileName."
                             }
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-                            Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
-                            & "C:\Temp\Scripts\PCCheck.ps1"
-                            $endTime = Get-Date
-                            Send-DiscordNotification -Title "🔵 Quick Check beendet" -Description "Der Quick Check wurde abgeschlossen." -Color 3447003 -PingRole -ExtraFields @(
-                                @{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Endzeit"; value = $endTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Laufzeit"; value = $endTime.Subtract($startTime).ToString("hh\:mm\:ss"); inline = $true }
-                            )
-                        } catch {
-                            Send-DiscordNotification -Title "🔴 Fehler beim Quick Check" -Description "$($_.Exception.Message)" -Color 15158332 -PingRole
-                            Write-Host "`n`nFehler beim Quick Check: $($_.Exception.Message)" -ForegroundColor red
                         }
+                        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+                        Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
+                        & "C:\Temp\Scripts\PCCheck.ps1"
                         return
                     }
                     3 {
                         Write-Host "`n`nPerforming Recording Check..." -ForegroundColor yellow
-                        $startTime = Get-Date
-                        Send-DiscordNotification -Title "🔎 Recording Check gestartet" -Description "Ein Recording Check wurde gestartet." -Color 3447003 -PingRole -ExtraFields @(@{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true })
-                        try {
-                            New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
-                            New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
-                            Set-Location "C:\temp"
-                            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/dot-sys/Recording-Check/master/Recording-Check.ps1" -OutFile "C:\Temp\Scripts\Recording-Check.ps1" -ErrorAction Stop
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-                            Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
-                            Add-MpPreference -ExclusionPath 'C:\Temp' | Out-Null
-                            & C:\temp\scripts\Recording-Check.ps1
-                            $endTime = Get-Date
-                            Send-DiscordNotification -Title "🔵 Recording Check beendet" -Description "Der Recording Check wurde abgeschlossen." -Color 3447003 -PingRole -ExtraFields @(
-                                @{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Endzeit"; value = $endTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Laufzeit"; value = $endTime.Subtract($startTime).ToString("hh\:mm\:ss"); inline = $true }
-                            )
-                        } catch {
-                            Send-DiscordNotification -Title "🔴 Fehler beim Recording Check" -Description "$($_.Exception.Message)" -Color 15158332 -PingRole
-                            Write-Host "`n`nFehler beim Recording Check: $($_.Exception.Message)" -ForegroundColor red
-                        }
+                        New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
+                        New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
+                        Set-Location "C:\temp"
+                        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/dot-sys/Recording-Check/master/Recording-Check.ps1" -OutFile "C:\Temp\Scripts\Recording-Check.ps1"
+                        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+                        Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
+                        Add-MpPreference -ExclusionPath 'C:\Temp' | Out-Null
+                        & C:\temp\scripts\Recording-Check.ps1
                         Start-Sleep 3
                         & C:\temp\scripts\Menu.ps1
                         return
                     }
                     4 {
                         Write-Host "`n`nPerforming Advanced Filechecking (BETA)..." -ForegroundColor yellow
-                        $startTime = Get-Date
-                        Send-DiscordNotification -Title "🔎 Advanced Filechecking gestartet" -Description "Ein Advanced Filechecking (BETA) wurde gestartet." -Color 3447003 -PingRole -ExtraFields @(@{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true })
-                        try {
-                            New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
-                            Set-Location "C:\temp"
-                            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Packers.ps1" -OutFile "C:\Temp\Scripts\Packers.ps1" -ErrorAction Stop
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-                            & C:\Temp\Scripts\Packers.ps1
-                            $endTime = Get-Date
-                            Send-DiscordNotification -Title "🔵 Advanced Filechecking beendet" -Description "Das Advanced Filechecking (BETA) wurde abgeschlossen." -Color 3447003 -PingRole -ExtraFields @(
-                                @{ name = "Startzeit"; value = $startTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Endzeit"; value = $endTime.ToString("dd.MM.yyyy HH:mm:ss"); inline = $true },
-                                @{ name = "Laufzeit"; value = $endTime.Subtract($startTime).ToString("hh\:mm\:ss"); inline = $true }
-                            )
-                        } catch {
-                            Send-DiscordNotification -Title "🔴 Fehler beim Advanced Filechecking" -Description "$($_.Exception.Message)" -Color 15158332 -PingRole
-                            Write-Host "`n`nFehler beim Advanced Filechecking: $($_.Exception.Message)" -ForegroundColor red
-                        }
+                        New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
+                        Set-Location "C:\temp"
+                        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Packers.ps1" -OutFile "C:\Temp\Scripts\Packers.ps1"
+                        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+                        & C:\Temp\Scripts\Packers.ps1
                         return
                     }
                     0 { break }
@@ -343,7 +233,6 @@ do {
         }
         "0" {
             Write-Host "`n`nExiting script." -ForegroundColor red
-            Send-DiscordNotification -Title "⏹️ Script beendet" -Description "Das Menu-Skript wurde geschlossen." -Color 9807270
             Start-Sleep 2
             Clear-Host
             return
