@@ -34,8 +34,8 @@ function Show-ChecksMenu {
 function Show-ProgramsMenu {
     return Read-Host "`n`n`nPrograms Menu:`n
     (1)`tDownload CSV File View (by NirSoft)`n
-    (2)`tDownload Timeline Explorer (by Eric Zimmerman)`n
-    (3)`tDownload Registry Explorer (by Eric Zimmerman)`n
+    (2)`tDownload Timeline Explorer (by ygk7)`n
+    (3)`tDownload Registry Explorer (by ygk7)`n
     (4)`tDownload Journal Tool (by Echo)`n
     (5)`tDownload WinprefetchView (by NirSoft)`n
     (6)`tDownload System Informer (by Winsider S&S Inc.)`n
