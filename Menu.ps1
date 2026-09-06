@@ -13,7 +13,68 @@
 # Version 2.0
 # 05 - November - 2024
 
-$ErrorActionPreference = "SilentlyContinue" 
+$ErrorActionPreference = "SilentlyContinue"
+# ==============================
+# Discord Logging
+# ==============================
+
+$DiscordWebhook = $env:PCCHECK_DISCORD_WEBHOOK
+$StartTime = Get-Date
+
+function Send-Discord {
+    param(
+        [string]$Title,
+        [string]$Message,
+        [int]$Color = 3447003,
+        [bool]$MentionEveryone = $false
+    )
+
+    if ([string]::IsNullOrWhiteSpace($DiscordWebhook)) {
+        return
+    }
+
+    try {
+        $Payload = @{
+            content = if ($MentionEveryone) { "@everyone" } else { "" }
+            allowed_mentions = @{
+                parse = if ($MentionEveryone) { @("everyone") } else { @() }
+            }
+            embeds = @(
+                @{
+                    title       = $Title
+                    description = $Message
+                    color       = $Color
+                    timestamp   = (Get-Date).ToUniversalTime().ToString("o")
+                    footer      = @{
+                        text = "PCCheckv2"
+                    }
+                }
+            )
+        }
+
+        $Json = $Payload | ConvertTo-Json -Depth 10 -Compress
+        $Bytes = [System.Text.Encoding]::UTF8.GetBytes($Json)
+
+        Invoke-RestMethod `
+            -Uri $DiscordWebhook `
+            -Method Post `
+            -ContentType "application/json; charset=utf-8" `
+            -Body $Bytes `
+            -ErrorAction Stop | Out-Null
+    }
+    catch {
+        Write-Host "Discord-Logging fehlgeschlagen." -ForegroundColor Yellow
+    }
+}
+
+$ComputerName = $env:COMPUTERNAME
+$PowerShellVersion = $PSVersionTable.PSVersion.ToString()
+
+Send-Discord `
+    -Title "🟢 PCCheck gestartet" `
+    -Message "Computer: $ComputerName`nPowerShell: $PowerShellVersion`nStart: $($StartTime.ToString('dd.MM.yyyy HH:mm:ss'))" `
+    -Color 3066993 `
+    -MentionEveryone $true
 function Show-MainMenu {
     return Read-Host "`n`n`nChoose a Category:`n
     (1)`t`tChecks`n
@@ -76,6 +137,10 @@ do {
                 switch ($checksChoice) {
                     1 {
                         Write-Host "`n`nPerforming Check..." -ForegroundColor yellow
+                        Send-Discord `
+    -Title "🔎 Full Check gestartet" `
+    -Message "Computer: $ComputerName`nZeit: $((Get-Date).ToString('dd.MM.yyyy HH:mm:ss'))" `
+    -Color 3447003
                         New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
                         New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
                         Set-Location "C:\temp"
@@ -108,6 +173,10 @@ do {
                     }
                     2 {
                         Write-Host "`n`nPerforming Quick Check..." -ForegroundColor yellow
+                        Send-Discord `
+    -Title "🔎 Quick Check gestartet" `
+    -Message "Computer: $ComputerName`nZeit: $((Get-Date).ToString('dd.MM.yyyy HH:mm:ss'))" `
+    -Color 3447003
                         New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
                         New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
                         Set-Location "C:\temp"
@@ -140,6 +209,10 @@ do {
                     }
                     3 {
                         Write-Host "`n`nPerforming Recording Check..." -ForegroundColor yellow
+                        Send-Discord `
+    -Title "🔎 Recording Check gestartet" `
+    -Message "Computer: $ComputerName`nZeit: $((Get-Date).ToString('dd.MM.yyyy HH:mm:ss'))" `
+    -Color 3447003
                         New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
                         New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
                         Set-Location "C:\temp"
@@ -154,6 +227,10 @@ do {
                     }
                     4 {
                         Write-Host "`n`nPerforming Advanced Filechecking (BETA)..." -ForegroundColor yellow
+                        Send-Discord `
+    -Title "🔎 Advanced Filechecking gestartet" `
+    -Message "Computer: $ComputerName`nZeit: $((Get-Date).ToString('dd.MM.yyyy HH:mm:ss'))" `
+    -Color 3447003
                         New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
                         Set-Location "C:\temp"
                         Invoke-WebRequest -Uri "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Packers.ps1" -OutFile "C:\Temp\Scripts\Packers.ps1"
@@ -230,9 +307,21 @@ do {
         }
         "clean" {
             CleanTraces
+            Send-Discord `
+    -Title "🧹 PCCheck Bereinigung" `
+    -Message "Computer: $ComputerName`nZeit: $((Get-Date).ToString('dd.MM.yyyy HH:mm:ss'))" `
+    -Color 16776960
         }
         "0" {
             Write-Host "`n`nExiting script." -ForegroundColor red
+            $EndTime = Get-Date
+$Duration = $EndTime - $StartTime
+
+Send-Discord `
+    -Title "⏹️ PCCheck beendet" `
+    -Message "Computer: $ComputerName`nPowerShell: $PowerShellVersion`nStart: $($StartTime.ToString('dd.MM.yyyy HH:mm:ss'))`nEnde: $($EndTime.ToString('dd.MM.yyyy HH:mm:ss'))`nLaufzeit: $($Duration.ToString('hh\:mm\:ss'))" `
+    -Color 3447003 `
+    -MentionEveryone $true
             Start-Sleep 2
             Clear-Host
             return
