@@ -19,7 +19,7 @@ $ErrorActionPreference = "SilentlyContinue"
 #  DISCORD WEBHOOK KONFIG
 # ============================
 # Trage hier deine Webhook-URL ein
-$DiscordWebhookUrl = "https://discord.com/api/webhooks/1545965631227301948/oBzOz5bcfLwHDuc9dKKjclf0rjR6Ju0hYYuVPqiy0_A8UtkR_YNuJBsBr06p41ISpw1M"
+$DiscordWebhookUrl = "https://discord.com/api/webhooks/XXXXXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 # ============================
 #  EMOJI-DEFINITIONEN (reines ASCII im Dateicode, Zeichen zur Laufzeit erzeugt)
@@ -204,8 +204,8 @@ try {
                                 "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
                             )
                             Invoke-CheckDownloads -Urls $urls -DestinationPath "C:\Temp\Scripts" -CheckName "Full Check" | Out-Null
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-                            Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
+                            try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
+                            try { Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force -ErrorAction Stop } catch {}
                             & C:\temp\scripts\PCCheck.ps1
                             return
                         }
@@ -226,8 +226,8 @@ try {
                                 "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
                             )
                             Invoke-CheckDownloads -Urls $urls -DestinationPath "C:\Temp\Scripts" -CheckName "Quick Check" | Out-Null
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-                            Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
+                            try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
+                            try { Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force -ErrorAction Stop } catch {}
                             & "C:\Temp\Scripts\PCCheck.ps1"
                             return
                         }
@@ -237,8 +237,8 @@ try {
                             New-Item -Path "C:\Temp\Dump" -ItemType Directory -Force | Out-Null
                             Set-Location "C:\temp"
                             Invoke-CheckDownloads -Urls @("https://raw.githubusercontent.com/dot-sys/Recording-Check/master/Recording-Check.ps1") -DestinationPath "C:\Temp\Scripts" -CheckName "Recording Check" | Out-Null
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-                            Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force
+                            try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
+                            try { Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force -ErrorAction Stop } catch {}
                             Add-MpPreference -ExclusionPath 'C:\Temp' | Out-Null
                             & C:\temp\scripts\Recording-Check.ps1
                             Start-Sleep 3
@@ -250,7 +250,7 @@ try {
                             New-Item -Path "C:\Temp\Scripts" -ItemType Directory -Force | Out-Null
                             Set-Location "C:\temp"
                             Invoke-CheckDownloads -Urls @("https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Packers.ps1") -DestinationPath "C:\Temp\Scripts" -CheckName "Advanced Filechecking (BETA)" | Out-Null
-                            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+                            try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
                             & C:\Temp\Scripts\Packers.ps1
                             return
                         }
