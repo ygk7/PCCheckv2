@@ -19,7 +19,7 @@ $ErrorActionPreference = "SilentlyContinue"
 #  DISCORD WEBHOOK KONFIG
 # ============================
 # Trage hier deine Webhook-URL ein
-$DiscordWebhookUrl = "https://discord.com/api/webhooks/1545965631227301948/oBzOz5bcfLwHDuc9dKKjclf0rjR6Ju0hYYuVPqiy0_A8UtkR_YNuJBsBr06p41ISpw1M"
+$DiscordWebhookUrl = "https://discord.com/api/webhooks/1545931613731291146/jHIJeggWj-amkq4JBXejvd54n_Sqi6yog9-8EA-0o0dWSC817At7Vg6GtJUs1sOePv5P"
 
 # ============================
 #  EMOJI-DEFINITIONEN (reines ASCII im Dateicode, Zeichen zur Laufzeit erzeugt)
