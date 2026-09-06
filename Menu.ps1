@@ -19,14 +19,28 @@ $ErrorActionPreference = "SilentlyContinue"
 #  DISCORD WEBHOOK KONFIG
 # ============================
 # Trage hier deine Webhook-URL ein
-$DiscordWebhookUrl = "https://discord.com/api/webhooks/1545965631227301948/oBzOz5bcfLwHDuc9dKKjclf0rjR6Ju0hYYuVPqiy0_A8UtkR_YNuJBsBr06p41ISpw1M"
+$DiscordWebhookUrl = "https://discord.com/api/webhooks/XXXXXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+# ============================
+#  EMOJI-DEFINITIONEN (reines ASCII im Dateicode, Zeichen zur Laufzeit erzeugt)
+# ============================
+$E_Blue   = [char]::ConvertFromUtf32(0x1F535)                                    # Blauer Kreis
+$E_Red    = [char]::ConvertFromUtf32(0x1F534)                                    # Roter Kreis
+$E_Search = [char]::ConvertFromUtf32(0x1F50E)                                    # Lupe
+$E_Broom  = [char]::ConvertFromUtf32(0x1F9F9)                                    # Besen
+$E_Stop   = [char]::ConvertFromUtf32(0x23F9) + [char]0xFE0F                      # Stopp-Quadrat
+$E_Clock  = [char]::ConvertFromUtf32(0x1F550)                                    # Uhr
+$E_Flag   = [char]::ConvertFromUtf32(0x1F3C1)                                    # Ziel-Flagge
+$E_Timer  = [char]::ConvertFromUtf32(0x23F1) + [char]0xFE0F                      # Stoppuhr
+$E_PC     = [char]::ConvertFromUtf32(0x1F5A5) + [char]0xFE0F                     # Computer
+$E_Gear   = [char]::ConvertFromUtf32(0x2699) + [char]0xFE0F                      # Zahnrad
 
 $Global:ScriptStartTime = Get-Date
 $ComputerName = $env:COMPUTERNAME
 $PSVersionString = $PSVersionTable.PSVersion.ToString()
 
 function Get-SystemInfoBlock {
-    return "🖥️ **Computer:** $ComputerName`n⚙️ **PowerShell:** $PSVersionString"
+    return "$E_PC **Computer:** $ComputerName`n$E_Gear **PowerShell:** $PSVersionString"
 }
 
 function Send-DiscordMessage {
@@ -62,15 +76,15 @@ function Send-DiscordMessage {
     }
 }
 
-# Farbcodes für die verschiedenen Meldungsarten
+# Farbcodes fuer die verschiedenen Meldungsarten
 $ColorBlue   = 3447003   # Start/Ende
 $ColorRed    = 15158332  # Fehler
-$ColorYellow = 15844367  # Check läuft
+$ColorYellow = 15844367  # Check laeuft
 $ColorGreen  = 3066993   # Bereinigung / Erfolg
 $ColorGray   = 9807270   # Beenden
 
 # ============================
-#  MENÜ-FUNKTIONEN
+#  MENUe-FUNKTIONEN
 # ============================
 function Show-MainMenu {
     return Read-Host "`n`n`nChoose a Category:`n
@@ -104,15 +118,15 @@ function Show-ProgramsMenu {
 function CleanTraces {
     Write-Host "`n`nCleaning traces of the Check..." -ForegroundColor yellow
     Write-Host "`rDoes not include installed programs" -ForegroundColor yellow
-    Send-DiscordMessage -Message "🧹 **Bereinigung gestartet**`n$(Get-SystemInfoBlock)" -Color $ColorGreen
+    Send-DiscordMessage -Message "$E_Broom **Bereinigung gestartet**`n$(Get-SystemInfoBlock)" -Color $ColorGreen
     Start-Sleep 1
     try {
         Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
         Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
         Write-Host "Traces cleaned successfully." -ForegroundColor green
-        Send-DiscordMessage -Message "🧹 **Bereinigung abgeschlossen**`n$(Get-SystemInfoBlock)" -Color $ColorGreen
+        Send-DiscordMessage -Message "$E_Broom **Bereinigung abgeschlossen**`n$(Get-SystemInfoBlock)" -Color $ColorGreen
     } catch {
-        Send-DiscordMessage -Message "🔴 **Fehler bei der Bereinigung**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+        Send-DiscordMessage -Message "$E_Red **Fehler bei der Bereinigung**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
     }
     Write-Host "`n`n`tReturning to Menu in " -NoNewline
     Write-Host "2 " -NoNewLine -ForegroundColor Magenta
@@ -136,7 +150,7 @@ function Invoke-CheckDownloads {
         [string]$CheckName
     )
 
-    Send-DiscordMessage -Message "🔎 **$CheckName gestartet**`n$(Get-SystemInfoBlock)" -Color $ColorYellow
+    Send-DiscordMessage -Message "$E_Search **$CheckName gestartet**`n$(Get-SystemInfoBlock)" -Color $ColorYellow
 
     $allOk = $true
     foreach ($url in $Urls) {
@@ -152,7 +166,7 @@ function Invoke-CheckDownloads {
         } catch {
             $allOk = $false
             Write-Host "Failed to download $fileName." -ForegroundColor Red
-            Send-DiscordMessage -Message "🔴 **Download fehlgeschlagen: $fileName**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+            Send-DiscordMessage -Message "$E_Red **Download fehlgeschlagen: $fileName**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
         }
     }
     return $allOk
@@ -161,7 +175,7 @@ function Invoke-CheckDownloads {
 # ============================
 #  START-MELDUNG
 # ============================
-Send-DiscordMessage -Message "🔵 **Script gestartet**`n🕐 **Startzeit:** $($Global:ScriptStartTime.ToString('dd.MM.yyyy HH:mm:ss'))`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorBlue
+Send-DiscordMessage -Message "$E_Blue **Script gestartet**`n$E_Clock **Startzeit:** $($Global:ScriptStartTime.ToString('dd.MM.yyyy HH:mm:ss'))`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorBlue
 
 try {
     do {
@@ -260,7 +274,7 @@ try {
                                 Unzip -zipFilePath "C:\temp\dump\CSVFileView.zip" -destinationPath "C:\temp\dump\CSVFileView"
                                 Write-Host "CSVFileView downloaded and extracted successfully. Returning to Programs Menu." -ForegroundColor green
                             } catch {
-                                Send-DiscordMessage -Message "🔴 **Fehler beim Download von CSVFileView**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+                                Send-DiscordMessage -Message "$E_Red **Fehler beim Download von CSVFileView**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
                             }
                             Start-Sleep 5
                         }
@@ -271,7 +285,7 @@ try {
                                 Unzip -zipFilePath "C:\temp\dump\TimelineExplorer.zip" -destinationPath "C:\temp\dump\TimelineExplorer"
                                 Write-Host "Timeline Explorer downloaded and extracted successfully. Returning to Programs Menu." -ForegroundColor green
                             } catch {
-                                Send-DiscordMessage -Message "🔴 **Fehler beim Download von Timeline Explorer**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+                                Send-DiscordMessage -Message "$E_Red **Fehler beim Download von Timeline Explorer**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
                             }
                             Start-Sleep 5
                         }
@@ -282,7 +296,7 @@ try {
                                 Unzip -zipFilePath "C:\temp\dump\RegistryExplorer.zip" -destinationPath "C:\temp\dump\RegistryExplorer"
                                 Write-Host "Registry Explorer downloaded and extracted successfully. Returning to Programs Menu." -ForegroundColor green
                             } catch {
-                                Send-DiscordMessage -Message "🔴 **Fehler beim Download von Registry Explorer**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+                                Send-DiscordMessage -Message "$E_Red **Fehler beim Download von Registry Explorer**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
                             }
                             Start-Sleep 5
                         }
@@ -299,7 +313,7 @@ try {
                                 Unzip -zipFilePath "C:\temp\dump\WinprefetchView.zip" -destinationPath "C:\temp\dump\WinprefetchView"
                                 Write-Host "WinprefetchView downloaded and extracted successfully. Returning to Programs Menu." -ForegroundColor green
                             } catch {
-                                Send-DiscordMessage -Message "🔴 **Fehler beim Download von WinprefetchView**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+                                Send-DiscordMessage -Message "$E_Red **Fehler beim Download von WinprefetchView**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
                             }
                             Start-Sleep 5
                         }
@@ -315,7 +329,7 @@ try {
                                 (New-Object System.Net.WebClient).DownloadFile("https://www.voidtools.com/Everything-1.4.1.1026.x64-Setup.exe", "C:\temp\dump\Everything.exe")
                                 Write-Host "Everything downloaded successfully. Returning to Programs Menu." -ForegroundColor green
                             } catch {
-                                Send-DiscordMessage -Message "🔴 **Fehler beim Download von Everything**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+                                Send-DiscordMessage -Message "$E_Red **Fehler beim Download von Everything**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
                             }
                             Start-Sleep 5
                         }
@@ -332,7 +346,7 @@ try {
             }
             "0" {
                 Write-Host "`n`nExiting script." -ForegroundColor red
-                Send-DiscordMessage -Message "⏹️ **Script wird beendet (manuell)**`n$(Get-SystemInfoBlock)" -Color $ColorGray
+                Send-DiscordMessage -Message "$E_Stop **Script wird beendet (manuell)**`n$(Get-SystemInfoBlock)" -Color $ColorGray
                 Start-Sleep 2
                 Clear-Host
                 return
@@ -344,10 +358,10 @@ try {
         }
     } while ($mainChoice -ne 0)
 } catch {
-    Send-DiscordMessage -Message "🔴 **Unerwarteter Fehler im Script**`n``````$_``````n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+    Send-DiscordMessage -Message "$E_Red **Unerwarteter Fehler im Script**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
 } finally {
     $endTime = Get-Date
     $duration = $endTime - $Global:ScriptStartTime
     $durationString = "{0:hh\:mm\:ss}" -f $duration
-    Send-DiscordMessage -Message "🔵 **Script beendet**`n🕐 **Startzeit:** $($Global:ScriptStartTime.ToString('dd.MM.yyyy HH:mm:ss'))`n🏁 **Endzeit:** $($endTime.ToString('dd.MM.yyyy HH:mm:ss'))`n⏱️ **Laufzeit:** $durationString`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorBlue
+    Send-DiscordMessage -Message "$E_Blue **Script beendet**`n$E_Clock **Startzeit:** $($Global:ScriptStartTime.ToString('dd.MM.yyyy HH:mm:ss'))`n$E_Flag **Endzeit:** $($endTime.ToString('dd.MM.yyyy HH:mm:ss'))`n$E_Timer **Laufzeit:** $durationString`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorBlue
 }
