@@ -279,6 +279,44 @@ function Invoke-CheckDownloads {
     return ($failedFiles.Count -eq 0)
 }
 
+function Invoke-ExternalCheckScript {
+    param(
+        [string]$ScriptPath,
+        [string]$CheckName,
+        [string]$ViewerPath = ""
+    )
+
+    $success = $true
+    try {
+        & $ScriptPath
+    } catch {
+        $success = $false
+        Write-Log "$CheckName ist waehrend der Ausfuehrung fehlgeschlagen: $_"
+        Send-DiscordMessage -Message "$E_Red **$CheckName fehlgeschlagen waehrend der Ausfuehrung**`nFehler: $_`n$(Get-SystemInfoBlock)" -Mention $true -Color $ColorRed
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ViewerPath)) {
+        if (Test-Path $ViewerPath) {
+            try {
+                Start-Process $ViewerPath
+                Write-Log "Log-Viewer im Browser geoeffnet: $ViewerPath"
+                Send-DiscordMessage -Message "$E_Globe **Log-Viewer im Browser geoeffnet**`n$(Get-SystemInfoBlock)" -Color $ColorGreen
+            } catch {
+                Write-Log "Konnte Viewer nicht oeffnen: $_"
+                Send-DiscordMessage -Message "$E_Warning **Log-Viewer konnte nicht geoeffnet werden**`nFehler: $_`n$(Get-SystemInfoBlock)" -Color $ColorYellow
+            }
+        } else {
+            Write-Log "Viewer nicht gefunden unter $ViewerPath - kein Browser-Log verfuegbar"
+        }
+    }
+
+    if ($success) {
+        Send-DiscordMessage -Message "$E_Check **$CheckName abgeschlossen**`n$(Get-SystemInfoBlock)" -Color $ColorGreen
+    }
+
+    return $success
+}
+
 # ============================
 #  START
 # ============================
@@ -322,7 +360,7 @@ try {
                             Invoke-CheckDownloads -Urls $urls -DestinationPath "C:\Temp\Scripts" -CheckName "Full Check" | Out-Null
                             try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
                             try { Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force -ErrorAction Stop } catch {}
-                            & C:\temp\scripts\PCCheck.ps1
+                            Invoke-ExternalCheckScript -ScriptPath "C:\temp\scripts\PCCheck.ps1" -CheckName "Full Check" -ViewerPath "C:\Temp\Scripts\Viewer.html" | Out-Null
                             return
                         }
                         2 {
@@ -344,7 +382,7 @@ try {
                             Invoke-CheckDownloads -Urls $urls -DestinationPath "C:\Temp\Scripts" -CheckName "Quick Check" | Out-Null
                             try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
                             try { Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force -ErrorAction Stop } catch {}
-                            & "C:\Temp\Scripts\PCCheck.ps1"
+                            Invoke-ExternalCheckScript -ScriptPath "C:\Temp\Scripts\PCCheck.ps1" -CheckName "Quick Check" -ViewerPath "C:\Temp\Scripts\Viewer.html" | Out-Null
                             return
                         }
                         3 {
@@ -356,7 +394,7 @@ try {
                             try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
                             try { Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned -Force -ErrorAction Stop } catch {}
                             Add-MpPreference -ExclusionPath 'C:\Temp' | Out-Null
-                            & C:\temp\scripts\Recording-Check.ps1
+                            Invoke-ExternalCheckScript -ScriptPath "C:\temp\scripts\Recording-Check.ps1" -CheckName "Recording Check" | Out-Null
                             Start-Sleep 3
                             & C:\temp\scripts\Menu.ps1
                             return
@@ -368,7 +406,7 @@ try {
                             Set-Location "C:\temp"
                             Invoke-CheckDownloads -Urls @("https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Packers.ps1") -DestinationPath "C:\Temp\Scripts" -CheckName "Advanced Filechecking (BETA)" | Out-Null
                             try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch {}
-                            & C:\Temp\Scripts\Packers.ps1
+                            Invoke-ExternalCheckScript -ScriptPath "C:\Temp\Scripts\Packers.ps1" -CheckName "Advanced Filechecking (BETA)" | Out-Null
                             return
                         }
                         0 { break }
