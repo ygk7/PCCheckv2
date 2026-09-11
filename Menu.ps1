@@ -82,13 +82,13 @@ do {
                         Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
                         Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
                         $urls = @(
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/PCCheck.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/MFT.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Registry.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/SystemLogs.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/ProcDump.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Localhost.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/PCCheck.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/MFT.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/Registry.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/SystemLogs.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/ProcDump.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/Localhost.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/Viewer.html"
                         )
                         $destinationPath = "C:\Temp\Scripts"
                         foreach ($url in $urls) {
@@ -114,13 +114,13 @@ do {
                         Get-ChildItem -Path "C:\Temp\Dump" | Remove-Item -Recurse -Force | Out-Null
                         Get-ChildItem -Path "C:\Temp\Scripts" -File | Where-Object { $_.Name -ne "Menu.ps1" } | ForEach-Object { Remove-Item -Path $_.FullName -Recurse -Force } | Out-Null
                         $urls = @(
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/PCCheck.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/QuickMFT.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Registry.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/SystemLogs.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/ProcDump.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Localhost.ps1",
-                            "https://raw.githubusercontent.com/dot-sys/PCCheckv2/master/Viewer.html"
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/PCCheck.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/QuickMFT.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/Registry.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/SystemLogs.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/ProcDump.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/Localhost.ps1",
+                            "https://raw.githubusercontent.com/ygk7/PCCheckv2/master/Viewer.html"
                         )
                         $destinationPath = "C:\Temp\Scripts"
                         foreach ($url in $urls) {
